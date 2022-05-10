@@ -1,5 +1,3 @@
-from ctypes import set_errno
-from pyexpat import model
 from rest_framework import serializers
 from users.models import Account
 from .models import UserProfile
