@@ -1,0 +1,6 @@
+*.log
+*.pot
+*.pyc
+__pycache__
+chatnova.sqlite3
+media/profile_pics
