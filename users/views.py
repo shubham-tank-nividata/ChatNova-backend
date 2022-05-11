@@ -5,6 +5,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import AllowAny
 from .serializers import UserProfileSerializer
+from .models import Account,UserProfile
 
 class BlacklistTokenUpdateView(APIView):
     permission_classes = [AllowAny]
@@ -20,7 +21,7 @@ class BlacklistTokenUpdateView(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
-class UserSignup(APIView):
+class UserSignupView(APIView):
 
     def post(self,request,*args, **kwargs):
         serializer = UserProfileSerializer(data = request.data)
@@ -30,3 +31,22 @@ class UserSignup(APIView):
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
 
 
+class LoggedUser(APIView):
+
+    def get_object(self, username):
+        try:
+            return Account.objects.get(username=username)
+        except Account.DoesNotExist:
+            return None
+
+    def get(self, request, *args, **kwargs):
+        user = self.get_object(request.user)
+        
+        if not user:
+            return Response({'username':'', 'name':''})
+
+        userdata = {
+            'username':user.username,
+            'name': UserProfile.objects.get(user=user).name
+        }
+        return Response(userdata)
