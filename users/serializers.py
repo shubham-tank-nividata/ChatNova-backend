@@ -30,7 +30,6 @@ class UserProfileSerializer(serializers.ModelSerializer):
                             user=user,
                             name=validated_data.get('name'),
                             date_of_birth= validated_data.get('date_of_birth'),
-                            image=validated_data.get('image'),
                             bio=validated_data.get('bio'),
                         )
         return profile

@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import AllowAny
-from .serializers import UserProfileSerializer
+from .serializers import UserProfileSerializer, UserSerializer
 from .models import Account,UserProfile
 
 class BlacklistTokenUpdateView(APIView):
@@ -31,22 +31,20 @@ class UserSignupView(APIView):
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
 
 
-class LoggedUser(APIView):
+class UserProfileView(APIView):
 
-    def get_object(self, username):
-        try:
-            return Account.objects.get(username=username)
-        except Account.DoesNotExist:
-            return None
-
-    def get(self, request, *args, **kwargs):
-        user = self.get_object(request.user)
+    def get(self, request, user_id, *args, **kwargs):
+        user = Account.objects.get(id=user_id)
+        userserializer = UserSerializer(user)
         
-        if not user:
-            return Response({'username':'', 'name':''})
+        userprofile = UserProfile.objects.get(user_id = user.id)
 
-        userdata = {
-            'username':user.username,
-            'name': UserProfile.objects.get(user=user).name
-        }
-        return Response(userdata)
+        serializer = UserProfileSerializer({
+            'user':userserializer.data,
+            'name':userprofile.name,
+            'image':userprofile.image,
+            'date_of_birth':userprofile.date_of_birth,
+            'bio':userprofile.bio
+            })
+        
+        return Response(serializer.data)
