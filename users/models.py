@@ -67,6 +67,10 @@ class UserProfile(models.Model):
     date_of_birth = models.DateField()
     image = models.ImageField(default='default_profile.jpg',upload_to='profile_pics')
     bio = models.CharField(max_length=500,blank=True, null=True)
+    following = models.ManyToManyField('UserProfile')
+
+    def followers(self):
+        return UserProfile.objects.filter(following=self)
 
     def __str__(self):
         return self.name
