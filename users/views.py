@@ -30,8 +30,30 @@ class UserSignupView(APIView):
             return Response({"success" : f"Account Created Successfully for {serializer.data['name']}"},status=status.HTTP_201_CREATED)
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
 
+class LoggedUserView(APIView):
+
+    def get_object(self, username):
+        try:
+            return Account.objects.get(username=username)
+        except Account.DoesNotExist:
+            return None
+
+    def get(self, request, *args, **kwargs):
+        user = self.get_object(request.user)
+        
+        if not user:
+            return Response({'username':'', 'name':''})
+
+        userdata = {
+            'username':user.username,
+            'name': UserProfile.objects.get(user=user).name
+        }
+        return Response(userdata)
 
 class UserProfileView(APIView):
+
+    permission_classes = [AllowAny]
+    authentication_classes = ()
 
     def get(self, request, user_id, *args, **kwargs):
         user = Account.objects.get(id=user_id)
