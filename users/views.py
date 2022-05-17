@@ -4,7 +4,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import AllowAny
-from .serializers import UserProfileSerializer, UserSerializer
+from rest_framework.parsers import MultiPartParser, FormParser
+
+from .serializers import UserProfileSerializer, UserSerializer, UserUpdateSerializer,UserProfileUpdateSerializer
 from .models import Account,UserProfile
 
 class BlacklistTokenUpdateView(APIView):
@@ -53,9 +55,10 @@ class LoggedUserView(APIView):
 class UserProfileView(APIView):
 
     permission_classes = [AllowAny]
-    authentication_classes = ()
+    parser_classes = [MultiPartParser,FormParser]
 
     def get(self, request, user_id, *args, **kwargs):
+
         user = Account.objects.get(id=user_id)
         userserializer = UserSerializer(user)
         
@@ -70,3 +73,23 @@ class UserProfileView(APIView):
             })
         
         return Response(serializer.data)
+
+    def put(self, request,user_id, *args, **kwargs):
+        
+        user = Account.objects.get(id=user_id)
+        profile = UserProfile.objects.get(user_id=user_id)
+
+        userserializer = UserUpdateSerializer(user, data=request.data)
+        profileserializer = UserProfileUpdateSerializer(profile, data = request.data)
+
+        if userserializer.is_valid():
+            if profileserializer.is_valid():
+                userserializer.save()
+                profileserializer.save()
+                return Response({
+                    **userserializer.data,
+                    **profileserializer.data
+                })
+
+            return Response(profileserializer.errors)
+        return Response(userserializer.errors)

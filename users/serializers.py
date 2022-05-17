@@ -23,7 +23,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         model = UserProfile
         fields = ('user','name','date_of_birth','image','bio')
 
-    def create(self, validated_data):
+    def create(self,validated_data):
 
         user = UserSerializer.create(UserSerializer(), validated_data=validated_data.get('user'))
         profile = UserProfile.objects.create(
@@ -33,3 +33,15 @@ class UserProfileSerializer(serializers.ModelSerializer):
                             bio=validated_data.get('bio'),
                         )
         return profile
+
+class UserUpdateSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Account
+        fields = ('username', 'email','password' )
+
+class UserProfileUpdateSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = UserProfile
+        fields = ('name','date_of_birth','image','bio')
