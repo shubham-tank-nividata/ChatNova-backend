@@ -15,6 +15,12 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+
+#django debug toolbar
+INTERNAL_IPS = [
+    "127.0.0.1",
+]
+
 CORS_ORIGIN_ALLOW_ALL = True
 
 # Application definition
@@ -26,6 +32,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    "debug_toolbar",
     'rest_framework',
     'chatnova_api.apps.ChatnovaApiConfig',
     'corsheaders',
@@ -51,6 +58,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware', 
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
 ]
 
 ROOT_URLCONF = 'core.urls'

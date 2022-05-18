@@ -46,9 +46,13 @@ class LoggedUserView(APIView):
         if not user:
             return Response({'username':'', 'name':''})
 
+        profile = UserProfile.objects.get(user=user)
+
         userdata = {
+            'id':user.id,
             'username':user.username,
-            'name': UserProfile.objects.get(user=user).name
+            'name': profile.name,
+            'image':profile.image.url
         }
         return Response(userdata)
 
@@ -69,7 +73,9 @@ class UserProfileView(APIView):
             'name':userprofile.name,
             'image':userprofile.image,
             'date_of_birth':userprofile.date_of_birth,
-            'bio':userprofile.bio
+            'bio':userprofile.bio,
+            'following_count':len(userprofile.following.all()),
+            'followers_count': len(UserProfile.followers(userprofile))
             })
         
         return Response(serializer.data)
@@ -93,3 +99,64 @@ class UserProfileView(APIView):
 
             return Response(profileserializer.errors)
         return Response(userserializer.errors)
+
+class UserUpdateFollowView(APIView):
+
+    def get(self,request, follower_id, user_id):
+        user = UserProfile.objects.get(user_id=user_id)
+        follower = UserProfile.objects.get(user_id=follower_id)
+        return Response(follower.following.contains(user))
+
+    def post(self,request, follower_id, user_id):
+
+        user = UserProfile.objects.get(user_id=user_id)
+        follower = UserProfile.objects.get(user_id=follower_id)
+
+        if(follower.following.contains(user)):
+            follower.following.remove(user)
+        else:
+            follower.following.add(user)
+
+        account = Account.objects.get(id=user_id)
+        userserializer = UserSerializer(account)
+        
+        userprofile = UserProfile.objects.get(user_id = account.id)
+
+        serializer = UserProfileSerializer({
+            'user':userserializer.data,
+            'name':userprofile.name,
+            'image':userprofile.image,
+            'date_of_birth':userprofile.date_of_birth,
+            'bio':userprofile.bio,
+            'following_count':len(userprofile.following.all()),
+            'followers_count': len(userprofile.followers())
+            })
+
+        return Response(serializer.data)
+
+class UserFollowView(APIView):
+
+    def user_mapper(self, user):
+        return {
+            'id':user.user_id,
+            'name':user.name,
+            'username':user.user.username,
+            'image':user.image.url
+        }
+
+
+    def get(self, request,type, user_id):
+
+        if(type=='followers'):
+            userprofile = UserProfile.objects.get(user_id = user_id)
+
+            followers = userprofile.followers().select_related('user').all()
+          
+            return Response(list(map(self.user_mapper,followers)))
+
+        elif(type=='following'):
+            following = UserProfile.objects.get(user_id = user_id).following.all()
+            
+            return Response(list(map(self.user_mapper,following)))
+        
+        return Response({'error':'url param type can only be followers or following'},status=status.HTTP_404_NOT_FOUND)

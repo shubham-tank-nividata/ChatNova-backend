@@ -18,10 +18,12 @@ class UserSerializer(serializers.ModelSerializer):
 class UserProfileSerializer(serializers.ModelSerializer):
     
     user = UserSerializer(required=True)
+    following_count = serializers.IntegerField(read_only=True,required=False)
+    followers_count = serializers.IntegerField(read_only=True, required=False)
 
     class Meta:
         model = UserProfile
-        fields = ('user','name','date_of_birth','image','bio')
+        fields = ('user','name','date_of_birth','image','bio','following_count','followers_count')
 
     def create(self,validated_data):
 
