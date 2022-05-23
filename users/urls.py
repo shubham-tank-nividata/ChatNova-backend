@@ -1,7 +1,8 @@
 from django.urls import path,include
-from .views import BlacklistTokenUpdateView,UserSignupView, UserProfileView, LoggedUserView, UserUpdateFollowView, UserFollowView
+from .views import UserListView,BlacklistTokenUpdateView,UserSignupView, UserProfileView, LoggedUserView, UserUpdateFollowView, UserFollowView
 
 urlpatterns = [
+    path('',UserListView.as_view()),
     path('signup/', UserSignupView.as_view(), name='signup'),
     path('loggeduser/',LoggedUserView.as_view()),
     path('profile/<int:user_id>',UserProfileView.as_view()),

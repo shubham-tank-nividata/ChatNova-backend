@@ -1,3 +1,4 @@
+from django.db.models import Q
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework import status
 from rest_framework.response import Response
@@ -5,9 +6,29 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import AllowAny
 from rest_framework.parsers import MultiPartParser, FormParser
-
+from rest_framework.serializers import Serializer
 from .serializers import UserProfileSerializer, UserSerializer, UserUpdateSerializer,UserProfileUpdateSerializer
 from .models import Account,UserProfile
+
+class UserListView(APIView):
+
+    def user_mapper(self, user):
+        return {
+            'id':user.user_id,
+            'name':user.name,
+            'username':user.user.username,
+            'image':user.image.url
+        }
+
+    def get(self, request, *args, **kwargs):
+        
+        queryset = UserProfile.objects.select_related('user').all()
+        searchquery = request.query_params.get('search')
+        if(searchquery):
+            filtered_qs = queryset.filter(Q(name__contains=searchquery) | Q(user__username__contains=searchquery))
+            return Response(list(map(self.user_mapper,filtered_qs)))
+
+        return Response(list(map(self.user_mapper,queryset)))
 
 class BlacklistTokenUpdateView(APIView):
     permission_classes = [AllowAny]
@@ -151,7 +172,7 @@ class UserFollowView(APIView):
             userprofile = UserProfile.objects.get(user_id = user_id)
 
             followers = userprofile.followers().select_related('user').all()
-          
+
             return Response(list(map(self.user_mapper,followers)))
 
         elif(type=='following'):
