@@ -71,18 +71,44 @@ class PostDetail(generics.RetrieveAPIView):
 
 class CommentList(APIView):
 
+    def user_mapper(self, comment):
+        return {
+            'id':comment.id,
+            'user_id':comment.user_id,
+            'name':comment.user.userprofile.name,
+            'username':comment.user.username,
+            'image':comment.user.userprofile.image.url,
+            'comment_text':comment.comment_text,
+            'created_at':comment.created_at,
+        }
+
     def get(self, request,post_id,*args, **kwargs):
-        comments = Comment.objects.filter(post = post_id)
-        serializer = CommentSerializer(comments, many=True)
-        return Response(serializer.data)
+
+        comments = Comment.objects.filter(post = post_id).select_related('user').order_by('created_at').all()
+
+        return Response(list(map(self.user_mapper,comments)))
+
+    def post(self, request, post_id, *args, **kwargs):
+        comment = Comment(user_id=request.data['user_id'], post_id=post_id, comment_text=request.data['comment_text'])
+        comment.save()
+        return Response({'id':comment.id, 'user_id':comment.user_id, 'post_id':comment.post_id, 'comment_text':comment.comment_text})
 
 
 class LikeList(APIView):
 
+    def user_mapper(self, like):
+        return {
+            'id':like.user_id,
+            'name':like.user.userprofile.name,
+            'username':like.user.username,
+            'image':like.user.userprofile.image.url
+        }
+
     def get(self, request,post_id,*args, **kwargs):
-        likes = Like.objects.filter(post = post_id)
-        serializer = LikeSerializer(likes, many=True)
-        return Response(serializer.data)
+
+        likes = Like.objects.filter(post = post_id).select_related('user').all()
+
+        return Response(list(map(self.user_mapper,likes)))
 
 class LikeCreateRetriveDeleteView(APIView):
 
@@ -91,12 +117,21 @@ class LikeCreateRetriveDeleteView(APIView):
         return Response(isLiked)
 
     def post(self, request, user_id, post_id, *args, **kwargs):
+        like = Like.objects.filter(user_id=user_id, post_id=post_id)
+        if like.count() != 0:
+            like = like.first()
+            return Response({'id':like.id, 'user_id':user_id, 'post_id': post_id })
+        
         like = Like(user_id=user_id, post_id=post_id)
         like.save()
         return Response({'id':like.id, 'user_id':user_id, 'post_id': post_id })
     
     def delete(self, request, user_id, post_id, *args, **kwargs):
-        like = Like.objects.get(user_id=user_id,post_id=post_id)
+        like = Like.objects.filter(user_id=user_id,post_id=post_id)
+        if like.count() == 0:
+            like = like.first()
+            return Response({'id':like.id, 'user_id':user_id, 'post_id': post_id })
+        like = like.first()
         like.delete()
         return Response({'id':like.id, 'user_id':user_id, 'post_id': post_id })
 
