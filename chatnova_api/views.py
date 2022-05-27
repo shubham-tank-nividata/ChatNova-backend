@@ -29,7 +29,18 @@ class UserPostListCreateView(APIView):
         serializer = PostSerializer(data = request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data)
+            post = Post.objects.get(id=serializer.data.get('id'))
+
+            return Response({
+                'id':post.id,
+                'user_id':post.user.id,
+                'name':post.user.userprofile.name,
+                'username':post.user.username,
+                'profile_image':post.user.userprofile.image.url,
+                'content':post.content,
+                'image':post.image.url if post.image else None,
+                'created_at':post.created_at,
+            })
         return Response(serializer.errors)
 
 class followingPostList(APIView):
@@ -64,12 +75,12 @@ class followingPostList(APIView):
 
         return Response(sorted(posts, key=lambda post: post['created_at'], reverse=True))
 
-class PostDetail(generics.RetrieveAPIView):
+class PostRetriveDeleteView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
 
 
-class CommentList(APIView):
+class CommentListCreateView(APIView):
 
     def user_mapper(self, comment):
         return {
@@ -92,6 +103,17 @@ class CommentList(APIView):
         comment = Comment(user_id=request.data['user_id'], post_id=post_id, comment_text=request.data['comment_text'])
         comment.save()
         return Response({'id':comment.id, 'user_id':comment.user_id, 'post_id':comment.post_id, 'comment_text':comment.comment_text})
+
+
+class CommentRetriveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        post_id = self.kwargs['post_id']
+        return Comment.objects.filter(post=post_id).all()
+    
+    serializer_class = CommentSerializer
 
 
 class LikeList(APIView):

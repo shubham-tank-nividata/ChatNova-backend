@@ -6,6 +6,7 @@ class Post(models.Model):
     user = models.ForeignKey(Account, on_delete=models.CASCADE)
     content = models.CharField(max_length=280)
     image = models.ImageField(null=True, blank=True,upload_to='post_pics')
+    repost = models.ForeignKey('Post', on_delete=models.CASCADE, blank=True, null=True)
     created_at = models.DateTimeField(default=timezone.now)
 
 class Like(models.Model):
