@@ -30,6 +30,8 @@ class UserListView(APIView):
 
         return Response(list(map(self.user_mapper,queryset)))
 
+
+
 class BlacklistTokenUpdateView(APIView):
     permission_classes = [AllowAny]
     authentication_classes = ()
@@ -44,6 +46,8 @@ class BlacklistTokenUpdateView(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
+
+
 class UserSignupView(APIView):
 
     def post(self,request,*args, **kwargs):
@@ -52,6 +56,8 @@ class UserSignupView(APIView):
             serializer.save()
             return Response({"success" : f"Account Created Successfully for {serializer.data['name']}"},status=status.HTTP_201_CREATED)
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+
+
 
 class LoggedUserView(APIView):
 
@@ -76,6 +82,8 @@ class LoggedUserView(APIView):
             'image':profile.image.url
         }
         return Response(userdata)
+
+
 
 class UserProfileView(APIView):
 
@@ -120,6 +128,8 @@ class UserProfileView(APIView):
 
             return Response(profileserializer.errors)
         return Response(userserializer.errors)
+
+
 
 class UserUpdateFollowView(APIView):
 

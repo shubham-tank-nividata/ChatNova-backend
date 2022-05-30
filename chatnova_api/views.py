@@ -17,7 +17,11 @@ class UserPostListCreateView(APIView):
             'profile_image':post.user.userprofile.image.url,
             'content':post.content,
             'image':post.image.url if post.image else None,
+            'repost':post.repost_id,
             'created_at':post.created_at,
+            'likes_count' : post.like_set.count(),
+            'comments_count' : post.comment_set.count(),
+            'repost_count': Post.objects.filter(repost_id=post.id).count()
         }
 
     def get(self, request, user_id,*args, **kwargs):
@@ -39,7 +43,11 @@ class UserPostListCreateView(APIView):
                 'profile_image':post.user.userprofile.image.url,
                 'content':post.content,
                 'image':post.image.url if post.image else None,
+                'repost':post.repost_id,
                 'created_at':post.created_at,
+                'likes_count' : post.like_set.count(),
+                'comments_count' : post.comment_set.count(),
+                'repost_count': Post.objects.filter(repost_id=post.id).count()
             })
         return Response(serializer.errors)
 
@@ -55,8 +63,10 @@ class followingPostList(APIView):
             'content':post.content,
             'image':post.image.url if post.image else None,
             'created_at':post.created_at,
+            'repost':post.repost_id,
             'likes_count' : post.like_set.count(),
-            'comments_count' : post.comment_set.count()
+            'comments_count' : post.comment_set.count(),
+            'repost_count': Post.objects.filter(repost_id=post.id).count()
         }
     
     def get(self, request):
@@ -75,9 +85,31 @@ class followingPostList(APIView):
 
         return Response(sorted(posts, key=lambda post: post['created_at'], reverse=True))
 
-class PostRetriveDeleteView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Post.objects.all()
-    serializer_class = PostSerializer
+
+
+class PostRetriveUpdateDeleteView(APIView):
+    
+    def get(self, request, pk):
+        post = Post.objects.select_related('user').get(id=pk)
+        userProfile = UserProfile.objects.get(user=post.user)
+        return Response({
+            'id':post.id,
+            'user_id':post.user_id,
+            'name':userProfile.name,
+            'username':post.user.username,
+            'profile_image':userProfile.image.url,
+            'content':post.content,
+            'image':post.image.url if post.image else None,
+            'repost':post.repost_id,
+            'created_at':post.created_at
+            })
+
+    def delete(self, request, pk):
+        post = Post.objects.get(pk=pk)
+        post.delete()
+        return Response(PostSerializer(post).data)
+
+
 
 
 class CommentListCreateView(APIView):
