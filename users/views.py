@@ -130,7 +130,6 @@ class UserProfileView(APIView):
         return Response(userserializer.errors)
 
 
-
 class UserUpdateFollowView(APIView):
 
     def get(self,request, follower_id, user_id):
